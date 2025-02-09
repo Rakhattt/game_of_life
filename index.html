@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f4f4f4;
+      font-family: monospace;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-rows: repeat(20, 30px);
+      grid-template-columns: repeat(20, 30px);
+      gap: 1px;
+    }
+
+    .cell {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      font-size: 16px;
+    }
+
+    .cell.live {
+      background-color: #000;
+      color: #fff;
+    }
+
+    .controls {
+      margin-bottom: 20px;
+    }
+
+    .controls button {
+      margin: 0 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <button id="startGame">Start</button>
+    <button id="stopGame">Stop</button>
+    <button id="randomGame">Random</button>
+  </div>
+  <div id="gameGrid" class="grid"></div>
+
+  <script>
+    const startButton = document.getElementById('startGame');
+    const stopButton = document.getElementById('stopGame');
+    const randomGame = document.getElementById('randomGame');
+    const gameGrid = document.getElementById('gameGrid');
+    const ROWS = 20;
+    const COLS = 20;
+    let grid = [];
+    let gameInterval = null;
+
+    for (let i = 0; i < ROWS; i++) {
+        let row = [];
+        for (let j = 0; j < COLS; j++) {
+            row.push(Math.random() > 0.8 ? 1 : 0);
+        }
+        grid.push(row);
+    }
+    console.log(grid)
+    function createGrid() {
+      gameGrid.innerHTML = '';
+      grid.forEach((row, rowIndex) => {
+        row.forEach((cell, colIndex) => {
+          const cellDiv = document.createElement('div');
+          cellDiv.classList.add('cell');
+          if (cell === 1) {
+            cellDiv.classList.add('live');
+            cellDiv.textContent = '0';
+          } else {
+            cellDiv.textContent = 'X';
+          }
+          gameGrid.appendChild(cellDiv);
+        });
+      });
+    }
+
+    function nextGeneration(){
+        const neighbors = [
+          [-1, -1], [-1, 0], [-1, 1],
+          [ 0, -1],          [ 0, 1],
+          [ 1, -1], [ 1, 0], [ 1, 1] 
+        ];
+        const copyGrid = grid.map(row => [...row]);
+
+        for (let row = 0; row < ROWS; row++) {
+          for (let col = 0; col < COLS; col++) {
+              let liveNeighbors = 0;
+
+              for (const [dx, dy] of neighbors) {
+                  const x = row + dx;
+                  const y = col + dy;
+                  if (x >= 0 && x < ROWS && y >= 0 && y < COLS) {
+                      console.log('copyGrid',copyGrid)
+                      liveNeighbors += copyGrid[x][y];
+                  }
+              }
+
+              if (copyGrid[row][col] === 1) { 
+                  if (liveNeighbors < 2 || liveNeighbors > 3) {
+                      grid[row][col] = 0;
+                  } else {
+                      grid[row][col] = 1;
+                  }
+              } else { 
+                  if (liveNeighbors === 3) {
+                      grid[row][col] = 1;
+                  }
+              }
+          }
+      }
+    }
+
+    function startGameLoop() {
+      if (!gameInterval) {
+        gameInterval = setInterval(() => {
+          createGrid();
+          nextGeneration(grid);
+        }, 1000 / 5);
+      }
+    }
+
+    function stopGameLoop() {
+      if (gameInterval) {
+        clearInterval(gameInterval);
+        gameInterval = null;
+      }
+    }
+
+    function randomGameLoop() {
+      location.reload();
+    }
+
+    startButton.addEventListener('click', startGameLoop);
+    stopButton.addEventListener('click', stopGameLoop);
+    randomGame.addEventListener('click', randomGameLoop)
+    createGrid();
+  </script>
+</body>
+</html>
